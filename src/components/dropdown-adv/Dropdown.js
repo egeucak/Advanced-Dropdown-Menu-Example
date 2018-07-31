@@ -1,8 +1,11 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableHighlight, TouchableWithoutFeedback, TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableHighlight,
+    TouchableWithoutFeedback, TextInput, Platform, Dimensions, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 // import Fuse from "fuse.js";
 import Fuse from "../../../node_modules/fuse.js/src/index";
+
+const {height, width} = Dimensions.get("window");
 
 class Dropdown extends React.Component {
     constructor(props){
@@ -18,6 +21,7 @@ class Dropdown extends React.Component {
             currentPage:1,
             maxPage:Math.ceil(props.data.length/props.perPage),
             paginated: [],
+            buttonHeight:40,
         }
 
     }
@@ -33,11 +37,10 @@ class Dropdown extends React.Component {
     }
 
     _toggleDropdown = () => {
-        this.setState({dropdownOpen:(this.state.dropdownOpen+1)%2});
+        this.setState({dropdownOpen:!!((this.state.dropdownOpen+1)%2)});
     }
 
     _onPressButton(func) {
-        // Alert.alert('You tapped the button!');
         func();
     }
 
@@ -64,7 +67,8 @@ class Dropdown extends React.Component {
                 }}>
                     <Icon name={"md-search"} size={15}/>
                 </View>
-            </View> );
+            </View>
+        );
     }
 
     _renderDropdownElements = () => {
@@ -106,6 +110,7 @@ class Dropdown extends React.Component {
                 flex:0,
                 flexDirection:'row',
                 alignItems:'center',
+                justifyContent: 'flex-end',
             }}>
                 <TouchableWithoutFeedback hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                                           onPress={ ()=> {
@@ -156,38 +161,55 @@ class Dropdown extends React.Component {
     }
 
     render() {
-        console.log('evenasdasdsdt');
         return (
-            <View style={{ margin:40 }}>
-                {/*{this.renderDropdownElements()}*/}
-                <TouchableWithoutFeedback onPress={ ()=>this._toggleDropdown()}>
-                    <View onLayout={(event)=>{
-                        console.log('evenasdasdsdt', event);
-                        const {x, y, width, height} = event.nativeEvent.layout;
+            <View style={[Platform.OS === 'ios'? styles.iosStyle : '', { margin:40, }]}
+            >
+                {/*<View style={styles.fullScreen}*/}
+                      {/*onStartShouldSetResponder={ (evt) => console.log(evt)}*/}
+                {/*>*/}
+                {/*</View>*/}
+                <TouchableWithoutFeedback
+                    onLayout={(event)=>{
+                        let {x, y, width, height} = event.nativeEvent.layout;
+                        this.setState({buttonHeight:height});
                         console.log(x, y, width, height);
-                    }} style={ styles.menuButton }>
+                    }} onPress={ ()=>this._toggleDropdown()}>
+                    <View style={ styles.menuButton }>
                         <Text style={{fontSize:15,}}>
                             {this.state.title} <Icon size={15} name={"ios-arrow-dropdown"} />
                         </Text>
                     </View>
                 </TouchableWithoutFeedback>
                 {this.state.dropdownOpen ?
-                    <View style={styles.dropdown}>
-                        {/*<View style={styles.horizontalRuler}/>*/}
-                        {this._renderSearchBar()}
-                        {this._renderDropdownElements()}
-                        {this._renderPagination()}
+                    <View>
+                        <View
+                            style={[styles.dropdown]}>
+                            {this._renderSearchBar()}
+                            {this._renderDropdownElements()}
+                            <View style={styles.horizontalRuler}/>
+                            {this._renderPagination()}
+                        </View>
                     </View>
                     :
                     <View/>
                 }
             </View>
-
         );
     }
 }
 
 const styles= StyleSheet.create({
+    fullScreen: {
+        width:width,
+        height: height,
+        display: 'flex',
+        padding:0,
+        margin:0,
+        backgroundColor: 'rgba(0,0,0,0)',
+    },
+    iosStyle:{
+        zIndex:99,
+    },
     paginationButton: {
 
     },
@@ -200,18 +222,17 @@ const styles= StyleSheet.create({
     },
     dropdown: {
         position: 'absolute',
-        top:45,
         width: '100%',
-        minHeight: 300,
-        maxHeight: 300,
+        zIndex: 99,
+        minHeight: 200,
+        maxHeight: 400,
         padding: 10,
         backgroundColor: "#fbfbf3",
-        zIndex:2,
         elevation: 2,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.8,
-        shadowRadius: 2,
+        shadowRadius: 1,
     },
     item: {
         padding: 10,

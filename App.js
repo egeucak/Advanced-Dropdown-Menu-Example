@@ -22,7 +22,7 @@ export default class App extends React.Component {
     render() {
         return (
             <View style={styles.container}>
-                <Dropdown title="Pick an element to search" data={data} perPage={5} />
+                <Dropdown style={{ zIndex:2 }} title="Pick an element to search" data={data} perPage={15} />
                 <View style={{ zIndex:1, backgroundColor:'red'}}>
                     <Text>hele hele hele hele hele hele hele hele hele hele hele hele hele hele hele </Text>
                 </View>
