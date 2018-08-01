@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableHighlight,
-    TouchableWithoutFeedback, TextInput, Platform, Dimensions, Modal } from 'react-native';
+    TouchableWithoutFeedback, TextInput, Platform, Dimensions, PanResponder, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 // import Fuse from "fuse.js";
 import Fuse from "../../../node_modules/fuse.js/src/index";
@@ -12,6 +12,10 @@ class Dropdown extends React.Component {
         super(props);
 
         this.state = {
+            selected:props.selected,
+            minHeight: 0,
+            height:0,
+            animation   : new Animated.Value(0),
             data:props.data,
             perPage:props.perPage,
             title:props.title,
@@ -21,12 +25,28 @@ class Dropdown extends React.Component {
             currentPage:1,
             maxPage:Math.ceil(props.data.length/props.perPage),
             paginated: [],
-            buttonHeight:40,
         }
 
     }
 
-    componentDidUpdate = (prevProps, prevState) => {
+
+    componentWillMount() {
+        this.setState({
+            height:null,
+            minHeight:200,
+        })
+        this._panResponder = PanResponder.create({
+            onStartShouldSetPanResponder:(evt, gestureState) => {
+                console.log(gestureState);
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                // console.log(gestureState);
+                // DO JUNK HERE
+            }
+        });
+    }
+
+    componentDidUpdate (prevProps, prevState) {
         if(this.state.searchQuery!== prevState.searchQuery){
             this.search();
         }
@@ -36,12 +56,43 @@ class Dropdown extends React.Component {
         }
     }
 
-    _toggleDropdown = () => {
-        this.setState({dropdownOpen:!!((this.state.dropdownOpen+1)%2)});
+    _setMaxHeight(event){
+        this.setState({
+            //maxHeight   : event.nativeEvent.layout.height
+            maxHeight   : 400,
+        });
     }
 
-    _onPressButton(func) {
-        func();
+    _setMinHeight(event){
+        console.log(event.nativeEvent.layout.height);
+        this.setState({
+            // minHeight   : event.nativeEvent.layout.height
+            minHeight   : 0,
+        });
+    }
+
+    _toggleDropdown = () => {
+        let initialValue    = this.state.dropdownOpen ? this.state.maxHeight + this.state.minHeight : this.state.minHeight;
+        let finalValue      = this.state.dropdownOpen ? this.state.minHeight : this.state.maxHeight + this.state.minHeight;
+
+        this.setState({dropdownOpen:!!((this.state.dropdownOpen+1)%2)});
+        this.state.animation.setValue(initialValue);
+        Animated.spring(
+            this.state.animation,
+            {
+                toValue: finalValue,
+                overshootClamping: true,
+                tension: 100,
+                friction: 10,
+                delay: 20,
+            }
+        ).start();
+    }
+
+    _onPressButton(key, func) {
+        //func();
+        this.props.selected.setState({selected:key});
+        this._toggleDropdown();
     }
 
     _renderSearchBar = () => {
@@ -56,7 +107,8 @@ class Dropdown extends React.Component {
                     alignSelf: 'center',
                 }}>
                     <TextInput
-                        style={{ height:40 }}
+                        underlineColorAndroid={"transparent"}
+                        style={ styles.searchBar }
                         placeholder="Start typing to search"
                         onChangeText={ (text) => this.setState({searchQuery:text}) }
                     />
@@ -80,7 +132,7 @@ class Dropdown extends React.Component {
             <FlatList style={{
                 // flex:1,
             }} data={data} renderItem={({item}) => (
-                <TouchableHighlight key={item.key} onPress={ () => this._onPressButton(item.func)} underlayColor="white">
+                <TouchableHighlight key={item.key} onPress={ () => this._onPressButton(item.key, item.func)} underlayColor="white">
                     <View >
                         <Text style={styles.item}>{item.key}</Text>
                     </View>
@@ -164,35 +216,33 @@ class Dropdown extends React.Component {
         return (
             <View style={[Platform.OS === 'ios'? styles.iosStyle : '', { margin:40, }]}
             >
-                {/*<View style={styles.fullScreen}*/}
-                      {/*onStartShouldSetResponder={ (evt) => console.log(evt)}*/}
-                {/*>*/}
-                {/*</View>*/}
+                <View />
                 <TouchableWithoutFeedback
-                    onLayout={(event)=>{
-                        let {x, y, width, height} = event.nativeEvent.layout;
-                        this.setState({buttonHeight:height});
-                        console.log(x, y, width, height);
-                    }} onPress={ ()=>this._toggleDropdown()}>
+                    onLayout={this._setMinHeight.bind(this)}
+                    onPress={ ()=>this._toggleDropdown()}>
                     <View style={ styles.menuButton }>
                         <Text style={{fontSize:15,}}>
                             {this.state.title} <Icon size={15} name={"ios-arrow-dropdown"} />
                         </Text>
                     </View>
                 </TouchableWithoutFeedback>
-                {this.state.dropdownOpen ?
-                    <View>
-                        <View
-                            style={[styles.dropdown]}>
-                            {this._renderSearchBar()}
-                            {this._renderDropdownElements()}
-                            <View style={styles.horizontalRuler}/>
-                            {this._renderPagination()}
-                        </View>
-                    </View>
-                    :
-                    <View/>
-                }
+                <View>
+                    <Animated.View  onLayout={this._setMaxHeight.bind(this)}
+                                    {...this._panResponder.panHandlers}
+                                    style={[styles.dropdown,
+                                        {
+                                            opacity: this.state.animation,
+                                            height: this.state.animation,
+                                            minHeight: this.state.animation,
+                                            // display: Math.ceil(this.state.animation) ? 'block' : 'none',
+                                        }]}>
+                        {this._renderSearchBar()}
+                        <View style={[ styles.horizontalRuler, {marginTop:0} ]} />
+                        {this._renderDropdownElements()}
+                        <View style={styles.horizontalRuler}/>
+                        {this._renderPagination()}
+                    </Animated.View>
+                </View>
             </View>
         );
     }
@@ -202,10 +252,6 @@ const styles= StyleSheet.create({
     fullScreen: {
         width:width,
         height: height,
-        display: 'flex',
-        padding:0,
-        margin:0,
-        backgroundColor: 'rgba(0,0,0,0)',
     },
     iosStyle:{
         zIndex:99,
@@ -214,7 +260,7 @@ const styles= StyleSheet.create({
 
     },
     searchBar: {
-
+        height:40,
     },
     menuButton: {
         backgroundColor: "#bfbfbf",
@@ -230,9 +276,9 @@ const styles= StyleSheet.create({
         backgroundColor: "#fbfbf3",
         elevation: 2,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.8,
-        shadowRadius: 1,
+        shadowRadius: 2,
     },
     item: {
         padding: 10,

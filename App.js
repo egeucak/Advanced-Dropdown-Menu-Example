@@ -17,12 +17,19 @@ for (let i = 0; i<25; i++){
 
 
 export default class App extends React.Component {
+    constructor(props){
+        super(props);
 
+        this.state={
+            selected:""
+        }
+    }
 
     render() {
+        console.log(this.state.selected);
         return (
             <View style={styles.container}>
-                <Dropdown style={{ zIndex:2 }} title="Pick an element to search" data={data} perPage={15} />
+                <Dropdown style={{ zIndex:2 }} title="Dropdown Menu" data={data} selected={this} perPage={15} />
                 <View style={{ zIndex:1, backgroundColor:'red'}}>
                     <Text>hele hele hele hele hele hele hele hele hele hele hele hele hele hele hele </Text>
                 </View>
