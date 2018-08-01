@@ -11,51 +11,53 @@ class Dropdown extends React.Component {
     constructor(props){
         super(props);
 
-        this.optionalStyles ={
-            dropdownStyle : props.dropdownStyle
-        };
-
-        this.optionalProps = {
-            paginationEnabled: props.pagination === undefined ? true : props.pagination,
-            perPage: props.perPage || 10,
-            searchEnabled: props.searchEnabled === undefined ? true : props.searchEnabled,
-        }
-        console.log(this.optionalProps.searchEnabled)
 
         this.state = {
             selected:props.selected,
-            minHeight: 0,
-            height:0,
-            animation   : new Animated.Value(0),
             data:props.data,
-            perPage: this.optionalProps.paginationEnabled ? this.optionalProps.perPage : 999,
-            title:props.title,
             dropdownOpen: false,
             searchQuery: '',
             searchResult: props.data,
             currentPage:1,
             maxPage:Math.ceil(props.data.length/props.perPage),
             paginated: [],
-            statusBarHeight: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
+            update: 0,
         }
-
+        this._setOptionals();
     }
 
+    _setOptionals = () => {
+        console.log("BANG");
+        this.optionalStyles ={
+            dropdownStyle : this.props.dropdownStyle
+        };
+
+        this.optionalProps = {
+            paginationEnabled: this.props.pagination === undefined ? true : this.props.pagination,
+            statusBarHeight: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
+            // perPage: props.perPage || 10,
+            perPage: this.props.pagination ? this.props.perPage : 9999,
+            searchEnabled: this.props.searchEnabled === undefined ? true : this.props.searchEnabled,
+            title: this.props.title,
+        };
+    }
 
     componentWillMount() {
-        this.setState({
-            height:null,
-            minHeight:200,
-        })
+
     }
 
     componentDidUpdate (prevProps, prevState) {
+        if (prevProps !== this.props){
+            // console.log(prevProps, this.props);
+            this._setOptionals();
+        }
+
         if(this.state.searchQuery!== prevState.searchQuery){
             this.search();
         }
         let entries = Object(this.state.searchResult).length ? this.state.searchResult : this.state.data;
-        if (this.state.maxPage !==  Math.ceil(entries.length/this.state.perPage)) {
-            this.setState({maxPage: Math.ceil(entries.length / this.state.perPage)});
+        if (this.state.maxPage !==  Math.ceil(entries.length/this.optionalProps.perPage)) {
+            this.setState({maxPage: Math.ceil(entries.length / this.optionalProps.perPage)});
         }
     }
 
@@ -97,26 +99,11 @@ class Dropdown extends React.Component {
 
     _toggleDropdown = () => {
         this.setState({dropdownOpen:!!((this.state.dropdownOpen+1)%2)});
-
-        // let initialValue    = this.state.dropdownOpen ? this.state.maxHeight + this.state.minHeight : this.state.minHeight;
-        // let finalValue      = this.state.dropdownOpen ? this.state.minHeight : this.state.maxHeight + this.state.minHeight;
-
-        // this.state.animation.setValue(initialValue);
-        // Animated.spring(
-        //     this.state.animation,
-        //     {
-        //         toValue: finalValue,
-        //         overshootClamping: true,
-        //         tension: 100,
-        //         friction: 10,
-        //         delay: 0,
-        //     }
-        // ).start( (e) => console.log("I animated", e));
     }
 
     _onPressButton(key, func) {
-        //func();
-        this.props.selected.setState({selected:key});
+        func ? func() : null;
+        this.props.selected({selected:key});
         this._toggleDropdown();
     }
 
@@ -126,6 +113,8 @@ class Dropdown extends React.Component {
                 flex:0,
                 flexDirection: 'row',
                 justifyContent: 'space-evenly',
+                /* background color will be red if query is longer than 0 and there are no search results */
+                backgroundColor: this.state.searchQuery.length ? (Object.keys(this.state.searchResult).length===0 ? "rgba(255,0,0,0.5)" : "transparent") : "transparent",
             }}>
                 <View style={{
                     flex:4,
@@ -172,7 +161,7 @@ class Dropdown extends React.Component {
         let tempPaginated = [[]];
         for (let i = 0; i<data.length; i++){
             tempPaginated[currentPage].push(data[i]);
-            if ((i+1) % this.state.perPage === 0) {
+            if ((i+1) % this.optionalProps.perPage === 0) {
                 currentPage++;
                 tempPaginated.push([]);
             }
@@ -225,7 +214,7 @@ class Dropdown extends React.Component {
                 onPress={ ()=>this._toggleDropdown()}>
                 <View style={ styles.menuButton }>
                     <Text style={{fontSize:15,}}>
-                        {this.state.title} <Icon size={15} name={"ios-arrow-dropdown"} />
+                        {this.optionalProps.title} <Icon size={15} name={"ios-arrow-dropdown"} />
                     </Text>
                 </View>
             </TouchableWithoutFeedback>
@@ -248,6 +237,7 @@ class Dropdown extends React.Component {
     }
 
     render() {
+        // console.log(this.optionalProps);
         return (
             <View style={[Platform.OS === 'ios'? styles.iosStyle : '', { margin:40, }]}
                   onLayout={ (e) => {
@@ -269,7 +259,7 @@ class Dropdown extends React.Component {
                     {this._renderBackground()}
                     <View style={{
                         position: 'absolute',
-                        top: this.state.buttonY - this.state.statusBarHeight,
+                        top: this.state.buttonY - this.optionalProps.statusBarHeight,
                         left: this.state.buttonX,
                         width: this.state.buttonWidth,
                     }}>

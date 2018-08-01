@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Button } from 'react-native';
 
 import Dropdown from './src/components/dropdown-adv/Dropdown';
 
@@ -21,15 +21,15 @@ export default class App extends React.Component {
         super(props);
 
         this.state={
-            selected:""
+            selected:"",
         }
     }
 
     render() {
-        console.log(this.state.selected);
+        console.log("Selected one is ", this.state.selected);
         return (
             <View style={styles.container}>
-                <Dropdown title="Dropdown Menu" data={data} selected={this} perPage={15} pagination={false}/>
+                <Dropdown title={"Dropdown Menu"} data={data} selected={this.setState.bind(this)} perPage={5} pagination={true}/>
                 <View style={{ backgroundColor:'red'}}>
                     <Text >hele hele hele hele hele hele hele hele hele hele hele hele hele hele hele </Text>
                 </View>
