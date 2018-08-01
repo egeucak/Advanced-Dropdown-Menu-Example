@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableHighlight,
+import { StyleSheet, Text, View, FlatList, TouchableHighlight, Modal,
     TouchableWithoutFeedback, TextInput, Platform, Dimensions, PanResponder, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 // import Fuse from "fuse.js";
@@ -108,7 +108,7 @@ class Dropdown extends React.Component {
                 }}>
                     <TextInput
                         underlineColorAndroid={"transparent"}
-                        style={ styles.searchBar }
+                        style={[ styles.searchBar, { display: this.state.dropdownOpen ? "flex" : "none", } ]}
                         placeholder="Start typing to search"
                         onChangeText={ (text) => this.setState({searchQuery:text}) }
                     />
@@ -191,6 +191,20 @@ class Dropdown extends React.Component {
         )
     }
 
+    _renderDropDownButton = () => {
+        return(
+            <TouchableWithoutFeedback
+                onLayout={this._setMinHeight.bind(this)}
+                onPress={ ()=>this._toggleDropdown()}>
+                <View style={ styles.menuButton }>
+                    <Text style={{fontSize:15,}}>
+                        {this.state.title} <Icon size={15} name={"ios-arrow-dropdown"} />
+                    </Text>
+                </View>
+            </TouchableWithoutFeedback>
+        )
+    }
+
     search = () => {
         const options = {
             shouldSort: true,
@@ -214,18 +228,12 @@ class Dropdown extends React.Component {
 
     render() {
         return (
+
             <View style={[Platform.OS === 'ios'? styles.iosStyle : '', { margin:40, }]}
             >
-                <View />
-                <TouchableWithoutFeedback
-                    onLayout={this._setMinHeight.bind(this)}
-                    onPress={ ()=>this._toggleDropdown()}>
-                    <View style={ styles.menuButton }>
-                        <Text style={{fontSize:15,}}>
-                            {this.state.title} <Icon size={15} name={"ios-arrow-dropdown"} />
-                        </Text>
-                    </View>
-                </TouchableWithoutFeedback>
+                <View>
+                    {this._renderDropDownButton()}
+                </View>
                 <View>
                     <Animated.View  onLayout={this._setMaxHeight.bind(this)}
                                     {...this._panResponder.panHandlers}
@@ -234,7 +242,7 @@ class Dropdown extends React.Component {
                                             opacity: this.state.animation,
                                             height: this.state.animation,
                                             minHeight: this.state.animation,
-                                            // display: Math.ceil(this.state.animation) ? 'block' : 'none',
+                                            // display: Math.ceil(this.state.animation) ? 'flex' : 'none',
                                         }]}>
                         {this._renderSearchBar()}
                         <View style={[ styles.horizontalRuler, {marginTop:0} ]} />
@@ -248,10 +256,24 @@ class Dropdown extends React.Component {
     }
 }
 
+
+{/*<Modal transparent={true}*/}
+{/*onRequestClose={ () => this._toggleDropdown()}*/}
+{/*visible={!!this.state.dropdownOpen}*/}
+{/*style={{ zIndex:1, backgroundColor:'red' }}>*/}
+{/*<TouchableWithoutFeedback style={{opacity:0}} onPress={ () => {console.log("pressed");this._toggleDropdown()} }>*/}
+{/*<View style={{ height:'100%', width:'100%', opacity:0}} />*/}
+{/*</TouchableWithoutFeedback>*/}
+{/*</Modal>*/}
+
 const styles= StyleSheet.create({
     fullScreen: {
-        width:width,
+        width: width,
         height: height,
+        position: "absolute",
+        // opacity:0,
+        zIndex:0,
+        backgroundColor:'red',
     },
     iosStyle:{
         zIndex:99,
@@ -260,7 +282,7 @@ const styles= StyleSheet.create({
 
     },
     searchBar: {
-        height:40,
+        height:45,
     },
     menuButton: {
         backgroundColor: "#bfbfbf",
@@ -269,7 +291,7 @@ const styles= StyleSheet.create({
     dropdown: {
         position: 'absolute',
         width: '100%',
-        zIndex: 99,
+        // zIndex: 99,
         minHeight: 200,
         maxHeight: 400,
         padding: 10,

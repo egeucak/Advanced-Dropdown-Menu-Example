@@ -31,7 +31,7 @@ export default class App extends React.Component {
             <View style={styles.container}>
                 <Dropdown style={{ zIndex:2 }} title="Dropdown Menu" data={data} selected={this} perPage={15} />
                 <View style={{ zIndex:1, backgroundColor:'red'}}>
-                    <Text>hele hele hele hele hele hele hele hele hele hele hele hele hele hele hele </Text>
+                    <Text >hele hele hele hele hele hele hele hele hele hele hele hele hele hele hele </Text>
                 </View>
             </View>
         );
