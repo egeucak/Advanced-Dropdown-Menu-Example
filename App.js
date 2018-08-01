@@ -29,8 +29,8 @@ export default class App extends React.Component {
         console.log(this.state.selected);
         return (
             <View style={styles.container}>
-                <Dropdown style={{ zIndex:2 }} title="Dropdown Menu" data={data} selected={this} perPage={15} />
-                <View style={{ zIndex:1, backgroundColor:'red'}}>
+                <Dropdown title="Dropdown Menu" data={data} selected={this} perPage={15} pagination={false}/>
+                <View style={{ backgroundColor:'red'}}>
                     <Text >hele hele hele hele hele hele hele hele hele hele hele hele hele hele hele </Text>
                 </View>
             </View>

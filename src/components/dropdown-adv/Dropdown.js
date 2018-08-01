@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableHighlight, Modal,
-    TouchableWithoutFeedback, TextInput, Platform, Dimensions, PanResponder, Animated } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableHighlight, Modal, StatusBar, StatusBarIOS,
+    TouchableWithoutFeedback, TextInput, Platform, Dimensions, PanResponder, Animated, KeyboardAvoidingView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 // import Fuse from "fuse.js";
 import Fuse from "../../../node_modules/fuse.js/src/index";
@@ -11,20 +11,32 @@ class Dropdown extends React.Component {
     constructor(props){
         super(props);
 
+        this.optionalStyles ={
+            dropdownStyle : props.dropdownStyle
+        };
+
+        this.optionalProps = {
+            paginationEnabled: props.pagination === undefined ? true : props.pagination,
+            perPage: props.perPage || 10,
+            searchEnabled: props.searchEnabled === undefined ? true : props.searchEnabled,
+        }
+        console.log(this.optionalProps.searchEnabled)
+
         this.state = {
             selected:props.selected,
             minHeight: 0,
             height:0,
             animation   : new Animated.Value(0),
             data:props.data,
-            perPage:props.perPage,
+            perPage: this.optionalProps.paginationEnabled ? this.optionalProps.perPage : 999,
             title:props.title,
-            dropdownOpen: 0,
+            dropdownOpen: false,
             searchQuery: '',
             searchResult: props.data,
             currentPage:1,
             maxPage:Math.ceil(props.data.length/props.perPage),
             paginated: [],
+            statusBarHeight: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
         }
 
     }
@@ -35,15 +47,6 @@ class Dropdown extends React.Component {
             height:null,
             minHeight:200,
         })
-        this._panResponder = PanResponder.create({
-            onStartShouldSetPanResponder:(evt, gestureState) => {
-                console.log(gestureState);
-            },
-            onPanResponderMove: (evt, gestureState) => {
-                // console.log(gestureState);
-                // DO JUNK HERE
-            }
-        });
     }
 
     componentDidUpdate (prevProps, prevState) {
@@ -54,6 +57,27 @@ class Dropdown extends React.Component {
         if (this.state.maxPage !==  Math.ceil(entries.length/this.state.perPage)) {
             this.setState({maxPage: Math.ceil(entries.length / this.state.perPage)});
         }
+    }
+
+    search = () => {
+        const options = {
+            shouldSort: true,
+            tokenize: false,
+            includeScore: true,
+            threshold: 0.4,
+            location: 0,
+            distance: 100,
+            maxPatternLength: 32,
+            minMatchCharLength: 1,
+            keys: [
+                "label"
+            ]
+        };
+        if (this.state.currentPage !== 1) this.setState({currentPage:1});
+        console.log(this.state.searchQuery);
+        let fuse = new Fuse(this.state.data, options);
+        let result = fuse.search(this.state.searchQuery);
+        if( result !== this.state.searchResult ) this.setState({searchResult: result});
     }
 
     _setMaxHeight(event){
@@ -72,21 +96,22 @@ class Dropdown extends React.Component {
     }
 
     _toggleDropdown = () => {
-        let initialValue    = this.state.dropdownOpen ? this.state.maxHeight + this.state.minHeight : this.state.minHeight;
-        let finalValue      = this.state.dropdownOpen ? this.state.minHeight : this.state.maxHeight + this.state.minHeight;
-
         this.setState({dropdownOpen:!!((this.state.dropdownOpen+1)%2)});
-        this.state.animation.setValue(initialValue);
-        Animated.spring(
-            this.state.animation,
-            {
-                toValue: finalValue,
-                overshootClamping: true,
-                tension: 100,
-                friction: 10,
-                delay: 20,
-            }
-        ).start();
+
+        // let initialValue    = this.state.dropdownOpen ? this.state.maxHeight + this.state.minHeight : this.state.minHeight;
+        // let finalValue      = this.state.dropdownOpen ? this.state.minHeight : this.state.maxHeight + this.state.minHeight;
+
+        // this.state.animation.setValue(initialValue);
+        // Animated.spring(
+        //     this.state.animation,
+        //     {
+        //         toValue: finalValue,
+        //         overshootClamping: true,
+        //         tension: 100,
+        //         friction: 10,
+        //         delay: 0,
+        //     }
+        // ).start( (e) => console.log("I animated", e));
     }
 
     _onPressButton(key, func) {
@@ -194,7 +219,9 @@ class Dropdown extends React.Component {
     _renderDropDownButton = () => {
         return(
             <TouchableWithoutFeedback
-                onLayout={this._setMinHeight.bind(this)}
+                onLayout={ (e) => {
+                    this._setMinHeight.bind(this)
+                }}
                 onPress={ ()=>this._toggleDropdown()}>
                 <View style={ styles.menuButton }>
                     <Text style={{fontSize:15,}}>
@@ -205,74 +232,82 @@ class Dropdown extends React.Component {
         )
     }
 
-    search = () => {
-        const options = {
-            shouldSort: true,
-            tokenize: false,
-            includeScore: true,
-            threshold: 0.4,
-            location: 0,
-            distance: 100,
-            maxPatternLength: 32,
-            minMatchCharLength: 1,
-            keys: [
-                "label"
-            ]
-        };
-        if (this.state.currentPage !== 1) this.setState({currentPage:1});
-        console.log(this.state.searchQuery);
-        let fuse = new Fuse(this.state.data, options);
-        let result = fuse.search(this.state.searchQuery);
-        if( result !== this.state.searchResult ) this.setState({searchResult: result});
+    _renderBackground() {
+        return (
+            <TouchableHighlight onPress={ () => {
+                console.log("BANG");
+                this._toggleDropdown();
+            } }>
+                <View style={{
+                    minHeight:"100%",
+                    minWidth:"100%",
+                    backgroundColor:'rgba(0,0,0,0.1)',
+                }}/>
+            </TouchableHighlight>
+        );
     }
 
     render() {
         return (
-
             <View style={[Platform.OS === 'ios'? styles.iosStyle : '', { margin:40, }]}
+                  onLayout={ (e) => {
+                      this.setState({buttonY:e.nativeEvent.layout.y});
+                      this.setState({buttonX:e.nativeEvent.layout.x});
+                      this.setState({buttonWidth:e.nativeEvent.layout.width});
+                      this.setState({buttonHeight:e.nativeEvent.layout.height});
+                  } }
             >
-                <View>
+                <View >
                     {this._renderDropDownButton()}
                 </View>
-                <View>
-                    <Animated.View  onLayout={this._setMaxHeight.bind(this)}
-                                    {...this._panResponder.panHandlers}
-                                    style={[styles.dropdown,
-                                        {
-                                            opacity: this.state.animation,
-                                            height: this.state.animation,
-                                            minHeight: this.state.animation,
-                                            // display: Math.ceil(this.state.animation) ? 'flex' : 'none',
-                                        }]}>
-                        {this._renderSearchBar()}
-                        <View style={[ styles.horizontalRuler, {marginTop:0} ]} />
-                        {this._renderDropdownElements()}
-                        <View style={styles.horizontalRuler}/>
-                        {this._renderPagination()}
-                    </Animated.View>
-                </View>
+
+                <Modal visible={this.state.dropdownOpen}
+                       onRequestClose={ () => this._toggleDropdown()}
+                       transparent={true}
+                       animationType="none"
+                >
+                    {this._renderBackground()}
+                    <View style={{
+                        position: 'absolute',
+                        top: this.state.buttonY - this.state.statusBarHeight,
+                        left: this.state.buttonX,
+                        width: this.state.buttonWidth,
+                    }}>
+                        <View>
+                            {this._renderDropDownButton()}
+                        </View>
+                        <View>
+                            {/*Animated.View style
+                              *opacity: this.state.animation,
+                              *height: this.state.animation,
+                              *minHeight: this.state.animation,
+                              *
+                              */}
+                            <View  onLayout={ () => this._setMaxHeight.bind(this) }
+                                            style={[styles.dropdown, this.optionalStyles.dropdownStyle]}>
+                                { this.optionalProps.searchEnabled && this._renderSearchBar()}
+                                <View style={[ styles.horizontalRuler, {marginTop:0} ]} />
+                                {this._renderDropdownElements()}
+                                <View style={styles.horizontalRuler}/>
+                                { this.optionalProps.paginationEnabled && this._renderPagination()}
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </View>
         );
     }
 }
 
-
-{/*<Modal transparent={true}*/}
-{/*onRequestClose={ () => this._toggleDropdown()}*/}
-{/*visible={!!this.state.dropdownOpen}*/}
-{/*style={{ zIndex:1, backgroundColor:'red' }}>*/}
-{/*<TouchableWithoutFeedback style={{opacity:0}} onPress={ () => {console.log("pressed");this._toggleDropdown()} }>*/}
-{/*<View style={{ height:'100%', width:'100%', opacity:0}} />*/}
-{/*</TouchableWithoutFeedback>*/}
-{/*</Modal>*/}
-
 const styles= StyleSheet.create({
     fullScreen: {
-        width: width,
-        height: height,
+        width: "700",
+        height: "700",
+        top:0,
+        left:0,
         position: "absolute",
         // opacity:0,
-        zIndex:0,
+        // zIndex:0,
         backgroundColor:'red',
     },
     iosStyle:{
