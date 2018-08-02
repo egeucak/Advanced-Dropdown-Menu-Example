@@ -29,7 +29,7 @@ export default class App extends React.Component {
         console.log("Selected one is ", this.state.selected);
         return (
             <View style={styles.container}>
-                <Dropdown title={"Dropdown Menu"} data={data} selected={this.setState.bind(this)} perPage={5} pagination={true}/>
+                <Dropdown style={{margin:50}} title={"Dropdown Menu"} data={data} selected={this.setState.bind(this)} perPage={5} pagination={true}/>
                 <View style={{ backgroundColor:'red'}}>
                     <Text >hele hele hele hele hele hele hele hele hele hele hele hele hele hele hele </Text>
                 </View>

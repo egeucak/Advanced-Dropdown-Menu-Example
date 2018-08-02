@@ -28,7 +28,8 @@ class Dropdown extends React.Component {
     _setOptionals = () => {
         console.log("BANG");
         this.optionalStyles ={
-            dropdownStyle : this.props.dropdownStyle
+            dropdownStyle : this.props.dropdownStyle,
+            buttonStyle: this.props.buttonStyle,
         };
 
         this.optionalProps = {
@@ -224,7 +225,7 @@ class Dropdown extends React.Component {
                     this._setMinHeight.bind(this)
                 }}
                 onPress={ ()=>this._toggleDropdown()}>
-                <View style={ styles.menuButton }>
+                <View style={ [styles.menuButton, this.optionalStyles.buttonStyle] }>
                     <Text style={{fontSize:15,}}>
                         {this.optionalProps.title} <Icon size={15} name={"ios-arrow-dropdown"} />
                     </Text>
@@ -248,16 +249,29 @@ class Dropdown extends React.Component {
         );
     }
 
+    measureDropdownButton = () => {
+        this.dropdownButton.measure( (a, b, width, height, px, py) => {
+            console.log(a, b, width, height, px, py);
+            this.setState({
+                buttonY:py,
+                buttonX:px,
+                buttonWidth:width,
+                buttonHeight:height,
+            });
+        })
+    }
+
     render() {
         // console.log(this.optionalProps);
         return (
-            <View style={[Platform.OS === 'ios'? styles.iosStyle : '', { margin:40, }]}
-                  onLayout={ (e) => {
-                      this.setState({buttonY:e.nativeEvent.layout.y});
-                      this.setState({buttonX:e.nativeEvent.layout.x});
-                      this.setState({buttonWidth:e.nativeEvent.layout.width});
-                      this.setState({buttonHeight:e.nativeEvent.layout.height});
-                  } }
+            <View style={[Platform.OS === 'ios'? styles.iosStyle : '', this.props.style]}
+                  ref={(c) => { this.dropdownButton = c; }} onLayout={this.measureDropdownButton}
+                // onLayout={ (e) => {
+                //     this.setState({buttonY:e.nativeEvent.layout.y});
+                //     this.setState({buttonX:e.nativeEvent.layout.x});
+                //     this.setState({buttonWidth:e.nativeEvent.layout.width});
+                //     this.setState({buttonHeight:e.nativeEvent.layout.height});
+                // } }
             >
                 <View >
                     {this._renderDropDownButton()}
@@ -286,7 +300,7 @@ class Dropdown extends React.Component {
                               *
                               */}
                             <View  onLayout={ () => this._setMaxHeight.bind(this) }
-                                            style={[styles.dropdown, this.optionalStyles.dropdownStyle]}>
+                                   style={[styles.dropdown, this.optionalStyles.dropdownStyle]}>
 
                                 { this.optionalProps.searchEnabled && this._renderSearchBar()}
 
