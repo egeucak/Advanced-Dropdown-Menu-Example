@@ -26,7 +26,9 @@ class Dropdown extends React.Component {
     }
 
     _setOptionals = () => {
-        console.log("BANG");
+        if(this.props.data !== this.state.data){
+            this.setState({data:this.props.data})
+        }
         this.optionalStyles ={
             dropdownStyle : this.props.dropdownStyle,
             buttonStyle: this.props.buttonStyle,
@@ -76,7 +78,7 @@ class Dropdown extends React.Component {
             ]
         };
         if (this.state.currentPage !== 1) this.setState({currentPage:1});
-        console.log(this.state.searchQuery);
+        // console.log(this.state.searchQuery);
         let fuse = new Fuse(this.state.data, options);
         let result = fuse.search(this.state.searchQuery);
         if( result !== this.state.searchResult ) this.setState({searchResult: result});
@@ -90,7 +92,7 @@ class Dropdown extends React.Component {
     }
 
     _setMinHeight(event){
-        console.log(event.nativeEvent.layout.height);
+        // console.log(event.nativeEvent.layout.height);
         this.setState({
             // minHeight   : event.nativeEvent.layout.height
             minHeight   : 0,
@@ -102,8 +104,9 @@ class Dropdown extends React.Component {
     }
 
     _onPressButton(key, func) {
+        // console.log(func);
         func ? func() : null;
-        this.props.selected({selected:key});
+        if(Object.keys(this.props).includes("selected")) this.props.selected({selected:key});
         this._toggleDropdown();
     }
 
@@ -237,7 +240,7 @@ class Dropdown extends React.Component {
     _renderBackground() {
         return (
             <TouchableHighlight onPress={ () => {
-                console.log("BANG");
+                // console.log("BANG");
                 this._toggleDropdown();
             } }>
                 <View style={{
@@ -251,7 +254,7 @@ class Dropdown extends React.Component {
 
     measureDropdownButton = () => {
         this.dropdownButton.measure( (a, b, width, height, px, py) => {
-            console.log(a, b, width, height, px, py);
+            // console.log(a, b, width, height, px, py);
             this.setState({
                 buttonY:py,
                 buttonX:px,
