@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, Button } from 'react-native';
 
-import Dropdown from './src/components/dropdown-adv/Dropdown';
+import Dropdown from "react-native-advanced-dropdown";
 
 const _func = (param) => {
     console.log(param);
