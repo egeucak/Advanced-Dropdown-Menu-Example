@@ -2,8 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableHighlight, Modal, StatusBar, StatusBarIOS,
     TouchableWithoutFeedback, TextInput, Platform, Dimensions, PanResponder, Animated, KeyboardAvoidingView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-// import Fuse from "fuse.js";
-import Fuse from "../../../node_modules/fuse.js/src/index";
+import Fuse from "fuse.js";
 
 const {height, width} = Dimensions.get("window");
 
@@ -169,6 +168,35 @@ class Dropdown extends React.Component {
         return tempPaginated;
     }
 
+    _renderLeftButton = () => {
+        return (
+            <TouchableWithoutFeedback hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                                      onPress={ ()=> {
+                                          this.setState({ currentPage : Math.max(1, (this.state.currentPage-1) ) });
+                                      } }>
+
+                <View style={{ borderColor:'rgba(0,0,0,0.1)', borderWidth:0, padding:5, width:30 }}>
+                    <Icon size={25} name={"md-arrow-dropleft"} style={{ margin:5 }}/>
+                </View>
+            </TouchableWithoutFeedback>
+        );
+    }
+
+    _renderRightButton = () => {
+        return (
+            <TouchableWithoutFeedback hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                                      onPress={ ()=> {
+                                          this.setState({currentPage : Math.min(this.state.currentPage+1 ,
+                                                  this.state.maxPage) });
+                                      } }>
+
+                <View style={{ borderColor:'rgba(0,0,0,0.1)', borderWidth:0, padding:5, width:30, }}>
+                    <Icon size={25} name={"md-arrow-dropright"} style={{ margin:5 }}/>
+                </View>
+            </TouchableWithoutFeedback>
+        );
+    }
+
     _renderPagination = () => {
 
         return (
@@ -178,28 +206,12 @@ class Dropdown extends React.Component {
                 alignItems:'center',
                 justifyContent: 'flex-end',
             }}>
-                <TouchableWithoutFeedback hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-                                          onPress={ ()=> {
-                                              this.setState({ currentPage : Math.max(1, (this.state.currentPage-1) ) });
-                                          } }>
-
-                    <View style={{ borderColor:'rgba(0,0,0,0.1)', borderWidth:0, padding:5, width:30 }}>
-                        <Icon size={25} name={"md-arrow-dropleft"} style={{ margin:5 }}/>
-                    </View>
-                </TouchableWithoutFeedback>
+                { this.state.currentPage!==1 && this._renderLeftButton()}
 
                 <Text>{this.state.currentPage} / {this.state.maxPage}</Text>
 
-                <TouchableWithoutFeedback hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-                                          onPress={ ()=> {
-                                              this.setState({currentPage : Math.min(this.state.currentPage+1 ,
-                                                      this.state.maxPage) });
-                                          } }>
+                { this.state.currentPage!== this.state.maxPage ? this._renderRightButton() : <View style={{ padding:25, width:30, }}/> }
 
-                    <View style={{ borderColor:'rgba(0,0,0,0.1)', borderWidth:0, padding:5, width:30, }}>
-                        <Icon size={25} name={"md-arrow-dropright"} style={{ margin:5 }}/>
-                    </View>
-                </TouchableWithoutFeedback>
             </View>
 
         )
@@ -275,11 +287,17 @@ class Dropdown extends React.Component {
                               */}
                             <View  onLayout={ () => this._setMaxHeight.bind(this) }
                                             style={[styles.dropdown, this.optionalStyles.dropdownStyle]}>
+
                                 { this.optionalProps.searchEnabled && this._renderSearchBar()}
+
                                 <View style={[ styles.horizontalRuler, {marginTop:0} ]} />
+
                                 {this._renderDropdownElements()}
+
                                 <View style={styles.horizontalRuler}/>
+
                                 { this.optionalProps.paginationEnabled && this._renderPagination()}
+
                             </View>
                         </View>
                     </View>
